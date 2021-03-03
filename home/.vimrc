@@ -76,3 +76,7 @@ let g:hardtime_timeout = 1000
 let g:hardtime_showmsg = 1
 let g:hardtime_maxcount = 0
 
+" Disable mouse in vim
+set mouse=
+set ttymouse=
+
