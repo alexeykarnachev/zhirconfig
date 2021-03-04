@@ -70,12 +70,6 @@ let g:syntastic_python_flake8_args = "--max-line-length=120"
 vnoremap <silent> # :s/^/#/<cr>:noh<cr>
 vnoremap <silent> -# :s/^#//<cr>:noh<cr>
 
-" Enable vim hardtime (sic!)
-let g:hardtime_default_on = 1
-let g:hardtime_timeout = 1000
-let g:hardtime_showmsg = 1
-let g:hardtime_maxcount = 0
-
 " Disable mouse in vim
 set mouse=
 set ttymouse=
