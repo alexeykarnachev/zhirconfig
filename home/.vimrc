@@ -15,6 +15,10 @@ let mapleader=" "
 " Show full file path
 set statusline+=%F
 
+" Customize cursor
+set cursorcolumn
+set cursorline
+
 " Colorscheme workaround
 let g:gruvbox_contrast_dark = "medium"
 let g:gruvbox_contrast_light = "medium"
