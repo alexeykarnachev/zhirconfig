@@ -12,9 +12,10 @@ map <SPACE> "\"
 let mapleader=" "
 
 " Colorscheme workaround
+let g:gruvbox_contrast_dark = "medium"
+let g:gruvbox_contrast_light = "medium"
 colorscheme gruvbox
 set bg=dark
-
 function! ToggleBackground()
     if (&background == "light")
       set background=dark 
@@ -38,6 +39,7 @@ let g:jedi#popup_on_dot = 0
 let g:jedi#completions_command = "<C-Space>"
 let g:jedi#usages_command = "<Leader>u"
 let g:jedi#show_call_signatures = "0"
+autocmd FileType python setlocal completeopt-=preview
 
 filetype plugin indent on
 " show existing tab with 4 spaces width
