@@ -37,6 +37,7 @@ nnoremap <silent> <Leader><F5> :call ToggleBackground()<cr>
 let g:jedi#popup_on_dot = 0
 let g:jedi#completions_command = "<C-Space>"
 let g:jedi#usages_command = "<Leader>u"
+let g:jedi#show_call_signatures = "0"
 
 filetype plugin indent on
 " show existing tab with 4 spaces width
