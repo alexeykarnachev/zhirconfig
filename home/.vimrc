@@ -11,6 +11,10 @@ nnoremap <SPASE> <Nop>
 map <SPACE> "\"
 let mapleader=" "
 
+" Customize status bat
+" Show full file path
+set statusline+=%F
+
 " Colorscheme workaround
 let g:gruvbox_contrast_dark = "medium"
 let g:gruvbox_contrast_light = "medium"
