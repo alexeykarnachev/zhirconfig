@@ -1,4 +1,5 @@
 set number
+set relativenumber
 
 " Cursor shape change workaround (+ mode change timeout):
 let &t_SI = "\e[6 q"
@@ -16,3 +17,22 @@ set expandtab " On pressing tab, insert 4 spaces
 let g:gruvbox_contrast_dark = "hard"
 colorscheme gruvbox
 set bg=dark
+
+" Disable comments autopaste
+autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
+
+" Auto open quickfix
+augroup myvimrc
+    autocmd!
+    autocmd QuickFixCmdPost [^l]* cwindow
+    autocmd QuickFixCmdPost l*    lwindow
+augroup END
+
+" Ctags
+set tags=$HOME/ctags/tags
+
+" Persistent undo
+set undofile
+set undodir=$HOME/.vim/undo
+set undolevels=5000
+set undoreload=10000
