@@ -18,21 +18,24 @@ let g:gruvbox_contrast_dark = "hard"
 colorscheme gruvbox
 set bg=dark
 
+set tags=$HOME/ctags/tags
+
 " Disable comments autopaste
 autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
 
-" Auto open quickfix
 augroup myvimrc
     autocmd!
     autocmd QuickFixCmdPost [^l]* cwindow
     autocmd QuickFixCmdPost l*    lwindow
 augroup END
 
-" Ctags
-set tags=$HOME/ctags/tags
-
 " Persistent undo
 set undofile
 set undodir=$HOME/.vim/undo
+
 set undolevels=5000
 set undoreload=10000
+
+" Highlight search matches
+set is hls
+nnoremap <silent> <Space> :nohlsearch<Bar>:echo<CR>
