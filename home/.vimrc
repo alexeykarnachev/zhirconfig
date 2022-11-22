@@ -39,3 +39,6 @@ set undoreload=10000
 " Highlight search matches
 set is hls
 nnoremap <silent> <Space> :nohlsearch<Bar>:echo<CR>
+
+" Files explorer settings
+let g:netrw_bufsettings = 'noma nomod number relativenumber nobl nowrap ro'
