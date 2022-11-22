@@ -17,6 +17,7 @@ set expandtab " On pressing tab, insert 4 spaces
 let g:gruvbox_contrast_dark = "hard"
 colorscheme gruvbox
 set bg=dark
+syntax on
 
 set tags=$HOME/ctags/tags
 
