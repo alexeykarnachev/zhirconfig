@@ -42,3 +42,6 @@ nnoremap <silent> <Space> :nohlsearch<Bar>:echo<CR>
 
 " Files explorer settings
 let g:netrw_bufsettings = 'noma nomod number relativenumber nobl nowrap ro'
+
+" Show command line autocomplete options
+set wildmenu
