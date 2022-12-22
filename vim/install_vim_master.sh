@@ -20,6 +20,9 @@ make reconfig
 sudo cp ./vim/src/vim /usr/bin/vim
 cp -r ../home/.vim* $HOME
 
-# Install vim plug
+# Install vim plug and ripgrep
 curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+sudo apt install ripgrep
+
+
