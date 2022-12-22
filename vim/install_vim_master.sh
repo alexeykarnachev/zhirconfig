@@ -19,3 +19,7 @@ make reconfig
 # Copy vim executable, settings and colorscheme
 sudo cp ./vim/src/vim /usr/bin/vim
 cp -r ../home/.vim* $HOME
+
+# Install vim plug
+curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim

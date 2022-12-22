@@ -1,5 +1,6 @@
 set number
 set relativenumber
+set ruler
 
 " Backspace behaviour
 set backspace=indent,eol,start
@@ -11,7 +12,8 @@ set ttimeout		" time out for key codes
 set ttimeoutlen=1	" wait up to 1ms after Esc for special key
 
 " Tab auto indent
-filetype plugin indent on
+set autoindent
+set cindent
 set tabstop=4 " show existing tab with 4 spaces width
 set shiftwidth=4 " when indenting with '>', use 4 spaces width
 set expandtab " On pressing tab, insert 4 spaces
@@ -49,3 +51,7 @@ let g:netrw_bufsettings = 'noma nomod number relativenumber nobl nowrap ro'
 
 " Show command line autocomplete options
 set wildmenu
+
+" Vim plug
+call plug#begin()
+    plug 'junegunn/fzf'
