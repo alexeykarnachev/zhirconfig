@@ -54,4 +54,5 @@ set wildmenu
 
 " Vim plug
 call plug#begin()
-    plug 'junegunn/fzf'
+    Plug 'junegunn/fzf'
+    Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
