@@ -55,6 +55,7 @@ let g:netrw_bufsettings = 'noma nomod number relativenumber nobl nowrap ro'
 set wildmenu
 
 " Leader mappings
+nnoremap <Space> <NOP>
 nnoremap <leader>r :Rg<CR>
 nnoremap <leader>m :Marks<CR>
 nnoremap <expr> <Leader>f ':FZF ' . input('') . '<CR>'
