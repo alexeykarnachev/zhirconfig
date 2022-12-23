@@ -2,6 +2,8 @@ set number
 set relativenumber
 set ruler
 
+let mapleader = " "
+
 " Backspace behaviour
 set backspace=indent,eol,start
 
@@ -51,6 +53,10 @@ let g:netrw_bufsettings = 'noma nomod number relativenumber nobl nowrap ro'
 
 " Show command line autocomplete options
 set wildmenu
+
+" Leader mappings
+nnoremap <leader>f :FZF<CR>
+nnoremap <leader>r :Rg<CR>
 
 " Vim plug
 call plug#begin()
