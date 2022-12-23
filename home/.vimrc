@@ -46,7 +46,7 @@ set undoreload=10000
 
 " Highlight search matches
 set is hls
-nnoremap <silent> <Space> :nohlsearch<Bar>:echo<CR>
+nnoremap <silent> <Esc> :nohlsearch<Bar>:echo<CR>
 
 " Files explorer settings
 let g:netrw_bufsettings = 'noma nomod number relativenumber nobl nowrap ro'
@@ -55,8 +55,9 @@ let g:netrw_bufsettings = 'noma nomod number relativenumber nobl nowrap ro'
 set wildmenu
 
 " Leader mappings
-nnoremap <leader>f :FZF<CR>
 nnoremap <leader>r :Rg<CR>
+nnoremap <leader>m :Marks<CR>
+nnoremap <expr> <Leader>f ':FZF ' . input('') . '<CR>'
 
 " Vim plug
 call plug#begin()
