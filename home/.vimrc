@@ -1,8 +1,10 @@
+" Disable comments autopaste
+autocmd BufNewFile,BufRead * setlocal formatoptions-=cro
+autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
+
 set number
 set relativenumber
 set ruler
-
-let mapleader = " "
 
 " Backspace behaviour
 set backspace=indent,eol,start
@@ -28,9 +30,6 @@ syntax on
 
 set tags=$HOME/ctags/tags
 
-" Disable comments autopaste
-autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
-
 augroup myvimrc
     autocmd!
     autocmd QuickFixCmdPost [^l]* cwindow
@@ -55,9 +54,10 @@ let g:netrw_bufsettings = 'noma nomod number relativenumber nobl nowrap ro'
 set wildmenu
 
 " Leader mappings
+let mapleader = " "
 nnoremap <Space> <NOP>
-nnoremap <leader>r :Rg<CR>
-nnoremap <leader>m :Marks<CR>
+nnoremap <Leader>r :Rg<CR>
+nnoremap <Leader>m :Marks<CR>
 nnoremap <expr> <Leader>f ':FZF ' . input('') . '<CR>'
 
 " Vim plug
@@ -65,3 +65,7 @@ call plug#begin()
     Plug 'junegunn/fzf.vim'
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 call plug#end()
+
+" Disable comments autopaste
+autocmd BufNewFile,BufRead * setlocal formatoptions-=cro
+autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
