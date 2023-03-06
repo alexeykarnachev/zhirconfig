@@ -56,15 +56,26 @@ set wildmenu
 " Leader mappings
 let mapleader = " "
 nnoremap <Space> <NOP>
-nnoremap <Leader>r :Rg<CR>
+nnoremap <expr> <Leader>r ':Rg ' . '<CR>'
+nnoremap <expr> <Leader>f ':FZF ' . input('Search in: ' . getcwd() . '/') . '<CR>'
 nnoremap <Leader>m :Marks<CR>
-nnoremap <expr> <Leader>f ':FZF ' . input('') . '<CR>'
+nnoremap <Leader>g :grep -r <C-R><C-W> .<CR>
 
 " Vim plug
 call plug#begin()
     Plug 'junegunn/fzf.vim'
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 call plug#end()
+
+" Open manpage in a vsplit window
+function! Man()
+    let keyword = expand('<cword>')
+    let output = system('man ' . keyword . ' | col -b')
+    rightbelow vsplit new
+    setlocal buftype=nofile bufhidden=hide noswapfile
+    call setline(1, split(output, "\n"))
+endfunction
+nnoremap K :call Man()<CR>
 
 " Disable comments autopaste
 autocmd BufNewFile,BufRead * setlocal formatoptions-=cro
