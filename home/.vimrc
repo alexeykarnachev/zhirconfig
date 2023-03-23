@@ -67,6 +67,10 @@ call plug#begin()
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 call plug#end()
 
+call plug#begin('~/.vim/plugged')
+   Plug 'ziglang/zig.vim'
+call plug#end()
+
 " Open manpage in a vsplit window
 function! Man()
     let keyword = expand('<cword>')
