@@ -61,14 +61,25 @@ nnoremap <expr> <Leader>f ':FZF ' . input('Search in: ' . getcwd() . '/') . '<CR
 nnoremap <Leader>m :Marks<CR>
 nnoremap <Leader>g :grep -r <C-R><C-W> .<CR>
 
+" Autocompletion and gotos
+set completeopt-=preview
+let g:ycm_auto_hover=''
+let g:ycm_goto_buffer_command = 'same-buffer'
+nmap <leader>h <plug>(YCMHover)
+nnoremap <leader>d :YcmCompleter GoTo<CR>
+" Don't use return key for the newline insertion when the selection list is active
+inoremap <expr> <CR> pumvisible() ? "\<C-Y>" : "\<CR>"
+
 " Vim plug
 call plug#begin()
     Plug 'junegunn/fzf.vim'
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
-call plug#end()
-
-call plug#begin('~/.vim/plugged')
-   Plug 'ziglang/zig.vim'
+    Plug 'ziglang/zig.vim'
+    Plug 'habamax/vim-godot'
+    Plug 'timonv/vim-cargo'
+    Plug 'jdonaldson/vaxe'
+    Plug 'Valloric/YouCompleteMe'
+    let g:zig_fmt_autosave = 0
 call plug#end()
 
 " Open manpage in a vsplit window
@@ -80,6 +91,17 @@ function! Man()
     call setline(1, split(output, "\n"))
 endfunction
 nnoremap K :call Man()<CR>
+
+" Godot
+func! GodotSettings() abort
+    nnoremap <buffer> <F4> :GodotRunLast<CR>
+    nnoremap <buffer> <F5> :GodotRun<CR>
+    nnoremap <buffer> <F6> :GodotRunCurrent<CR>
+    nnoremap <buffer> <F7> :GodotRunFZF<CR>
+endfunc
+augroup godot | au!
+    au FileType gdscript call GodotSettings()
+augroup end
 
 " Disable comments autopaste
 autocmd BufNewFile,BufRead * setlocal formatoptions-=cro
