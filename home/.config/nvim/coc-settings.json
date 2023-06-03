@@ -1,5 +1,5 @@
 {
-    "suggest.autoTrigger": "none",
+    "suggest.autoTrigger": "trigger",
     "notification.disabledProgressSources": ["*"],
     "rust-analyzer.diagnostics.enable": true,
     "rust-analyzer.inlayHints.bindingModeHints.enable": false,
@@ -7,11 +7,11 @@
     "rust-analyzer.inlayHints.closingBraceHints.enable": true,
     "rust-analyzer.inlayHints.closingBraceHints.minLines": 25,
     "rust-analyzer.inlayHints.closureReturnTypeHints.enable": "never",
-    "rust-analyzer.inlayHints.lifetimeElisionHints.enable": "never",
+    "rust-analyzer.inlayHints.lifetimeElisionHints.enable": "skip_trivial",
     "rust-analyzer.inlayHints.lifetimeElisionHints.useParameterNames": false,
     "rust-analyzer.inlayHints.maxLength": 25,
     "rust-analyzer.inlayHints.parameterHints.enable": true,
-    "rust-analyzer.inlayHints.reborrowHints.enable": "never",
+    "rust-analyzer.inlayHints.reborrowHints.enable": false,
     "rust-analyzer.inlayHints.renderColons": false,
     "rust-analyzer.inlayHints.typeHints.enable": false,
     "rust-analyzer.inlayHints.typeHints.hideNamedConstructor": true
