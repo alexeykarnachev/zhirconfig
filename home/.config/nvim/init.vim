@@ -3,6 +3,11 @@ lua require('plugins')
 set number
 set relativenumber
 set ruler
+set clipboard=unnamedplus
+
+" Disable comments autopaste
+autocmd BufNewFile,BufRead * setlocal formatoptions-=cro
+autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
 
 " Backspace behaviour
 set backspace=indent,eol,start
@@ -39,22 +44,53 @@ set wildmenu
 " Leader mappings
 let mapleader = " "
 nnoremap <Space> <NOP>
+nnoremap <expr> <Leader>r ':Rg ' . '<CR>'
+nnoremap <expr> <Leader>f ':FZF ' . input('Search in: ' . getcwd() . '/') . '<CR>'
+nnoremap <Leader>m :Marks<CR>
+nnoremap <Leader>g :grep -r <C-R><C-W> .<CR>
 
 " Colorscheme
 set background=dark " or light if you want light mode
 colorscheme gruvbox
 
 " Nerdtree
+let NERDTreeMinimalUI = 1
 nnoremap <leader>n :NERDTreeFocus<CR>
 nnoremap <C-n> :NERDTree<CR>
 nnoremap <C-t> :NERDTreeToggle<CR>
 nnoremap <C-f> :NERDTreeFind<CR>
 
-" GoTo code navigation
+" ------------------------------------------------------------------------
+" coc hotkeys
 nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
+nmap <silent> qf <Plug>(coc-fix-current)
+nmap <silent> <Leader>j <Plug>(coc-diagnostic-next-error)
+nmap <silent> <Leader>k <Plug>(coc-diagnostic-prev-error)
+
+nnoremap <silent> K :call ShowDocumentation()<CR>
+function! ShowDocumentation()
+  if CocAction('hasProvider', 'hover')
+    call CocActionAsync('doHover')
+  else
+    call feedkeys('K', 'in')
+  endif
+endfunction
+
+" Symbol renaming
+nmap <leader>rn <Plug>(coc-rename)
+
+" Remap <C-f> and <C-b> to scroll float windows/popups
+if has('nvim-0.4.0') || has('patch-8.2.0750')
+  nnoremap <silent><nowait><expr> <C-j> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-j>"
+  nnoremap <silent><nowait><expr> <C-k> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-k>"
+  inoremap <silent><nowait><expr> <C-j> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
+  inoremap <silent><nowait><expr> <C-k> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
+  vnoremap <silent><nowait><expr> <C-j> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-j>"
+  vnoremap <silent><nowait><expr> <C-k> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-k>"
+endif
 
 " Having longer updatetime (default is 4000 ms = 4s) leads to noticeable
 " delays and poor user experience
@@ -87,6 +123,7 @@ endfunction
 
 " Use <c-space> to trigger completion
 inoremap <silent><expr> <c-n> coc#refresh()
+" ------------------------------------------------------------------------
 
 " Vim plug
 call plug#begin()
@@ -96,5 +133,6 @@ call plug#begin()
     Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
     Plug 'timonv/vim-cargo'
     Plug 'preservim/nerdtree'
+    Plug 'neoclide/coc.nvim', {'branch': 'release'}
 call plug#end()
 
