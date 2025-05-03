@@ -12,6 +12,9 @@ vim.opt.updatetime = 250 -- Faster updates (e.g., for diagnostics)
 vim.opt.timeoutlen = 300 -- Time for mapped sequences
 vim.g.mapleader = " " -- Leader key set to space
 vim.g.have_nerd_font = true -- Enable Nerd Font support
+vim.wo.relativenumber = true -- Enable relative line numbers
+vim.opt.scrolloff = 8 -- Keep 8 lines above/below cursor for context
+vim.opt.sidescrolloff = 8 -- Keep 8 columns left/right of cursor
 
 -- Disable unused providers
 vim.g.loaded_ruby_provider = 0 -- Disable Ruby
@@ -59,7 +62,31 @@ require("lazy").setup({
         },
         cmd = "Neotree",
         keys = {
-            { "\\", "<cmd>Neotree toggle<cr>", desc = "Toggle Neo-tree" },
+            {
+                "\\",
+                function()
+                    local neotree = require("neo-tree.command")
+                    local current_win = vim.api.nvim_get_current_win()
+                    local current_buf = vim.api.nvim_win_get_buf(current_win)
+                    local is_neotree = vim.api.nvim_buf_get_option(current_buf, "filetype") == "neo-tree"
+
+                    if is_neotree then
+                        neotree.execute({ action = "close" })
+                    else
+                        neotree.execute({ action = "show", reveal = false })
+                        vim.defer_fn(function()
+                            for _, win in ipairs(vim.api.nvim_list_wins()) do
+                                local buf = vim.api.nvim_win_get_buf(win)
+                                if vim.api.nvim_buf_get_option(buf, "filetype") == "neo-tree" then
+                                    vim.api.nvim_set_current_win(win)
+                                    break
+                                end
+                            end
+                        end, 50)
+                    end
+                end,
+                desc = "Toggle/Focus Neo-tree",
+            },
         },
         opts = {
             close_if_last_window = false,
@@ -99,7 +126,7 @@ require("lazy").setup({
         cmd = { "Mason", "MasonInstall" },
         opts = {
             ui = { border = "rounded" },
-            ensure_installed = { "stylua", "black", "lua-language-server", "ruff" },
+            ensure_installed = { "stylua", "black", "lua-language-server", "ruff", "isort", "djlint" },
         },
         config = function(_, opts)
             require("mason").setup(opts)
@@ -107,7 +134,7 @@ require("lazy").setup({
             for _, tool in ipairs(opts.ensure_installed) do
                 local p = mr.get_package(tool)
                 if not p:is_installed() then
-                    p:install():get_receipt() -- Synchronous install
+                    p:install()
                 end
             end
         end,
@@ -125,7 +152,7 @@ require("lazy").setup({
             local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
             require("mason-lspconfig").setup({
-                ensure_installed = { "lua_ls", "ruff" },
+                ensure_installed = { "lua_ls", "pyright" },
                 automatic_installation = true,
                 handlers = {
                     function(server_name)
@@ -204,7 +231,6 @@ require("lazy").setup({
                 },
             })
 
-            -- Diagnostic config
             vim.diagnostic.config({
                 virtual_text = true,
                 signs = vim.g.have_nerd_font
@@ -212,7 +238,11 @@ require("lazy").setup({
                             text = { [vim.diagnostic.severity.ERROR] = "󰅚", [vim.diagnostic.severity.WARN] = "󰀪" },
                         }
                     or {},
-                float = { border = "rounded" },
+                float = {
+                    border = "rounded",
+                    source = true,
+                    scrollable = true,
+                },
             })
         end,
     },
@@ -245,8 +275,21 @@ require("lazy").setup({
                 sources = {
                     { name = "nvim_lsp" },
                     { name = "luasnip" },
-                    { name = "buffer" },
                     { name = "path" },
+                },
+                formatting = {
+                    format = function(entry, item)
+                        if entry.completion_item.detail ~= nil and entry.completion_item.detail ~= "" then
+                            item.menu = entry.completion_item.detail
+                        else
+                            item.menu = ({
+                                nvim_lsp = "[LSP]",
+                                luasnip = "[Snippet]",
+                                path = "[Path]",
+                            })[entry.source.name]
+                        end
+                        return item
+                    end,
                 },
             })
         end,
@@ -256,15 +299,30 @@ require("lazy").setup({
     {
         "nvim-treesitter/nvim-treesitter",
         build = ":TSUpdate",
-        event = { "BufReadPost", "BufNewFile" },
+        main = "nvim-treesitter.configs",
         opts = {
-            ensure_installed = { "lua", "python", "vim", "vimdoc" },
-            highlight = { enable = true },
+            ensure_installed = {
+                "bash",
+                "c",
+                "diff",
+                "html",
+                "lua",
+                "luadoc",
+                "markdown",
+                "markdown_inline",
+                "query",
+                "vim",
+                "vimdoc",
+                "typescript",
+                "javascript",
+                "svelte",
+            },
+            auto_install = true,
+            highlight = {
+                enable = true,
+            },
             indent = { enable = true },
         },
-        config = function(_, opts)
-            require("nvim-treesitter.configs").setup(opts)
-        end,
     },
 
     -- Telescope (Fuzzy Finder)
@@ -298,18 +356,113 @@ require("lazy").setup({
         opts = {
             formatters_by_ft = {
                 lua = { "stylua" },
-                python = { "black" },
+                python = { "ruff_format", "isort" },
+                glsl = { "clang-format" },
+                svelte = { "prettierd" },
+                typescript = { "prettierd" },
+                javascript = { "prettierd" },
+                html = { "prettierd" },
+                css = { "prettierd" },
+                htmldjango = { "djlint" },
             },
             formatters = {
                 stylua = {
                     command = vim.fn.stdpath("data") .. "/mason/bin/stylua",
                     args = { "--indent-type", "Spaces", "--indent-width", "4", "-" },
                 },
-                black = {
-                    command = vim.fn.stdpath("data") .. "/mason/bin/black",
+                ruff_format = {
+                    command = vim.fn.stdpath("data") .. "/mason/bin/ruff",
+                    args = { "format", "--line-length", "88", "-" },
+                },
+                isort = {
+                    command = vim.fn.stdpath("data") .. "/mason/bin/isort",
+                    args = { "--stdout", "--filename", "$FILENAME", "-" },
+                },
+                prettierd = {
+                    command = vim.fn.stdpath("data") .. "/mason/bin/prettierd",
+                    args = {
+                        "--print-width=88",
+                        "--tab-width=4",
+                        "--use-tabs=false",
+                        "$FILENAME",
+                    },
+                },
+                djlint = {
+                    command = vim.fn.stdpath("data") .. "/mason/bin/djlint",
+                    args = { "--reformat", "--indent", "4", "--profile=jinja", "-" },
+                    stdin = true,
                 },
             },
         },
+    },
+
+    -- Linting with nvim-lint
+    {
+        "mfussenegger/nvim-lint",
+        event = { "BufReadPost", "BufWritePost", "BufEnter" },
+        config = function()
+            require("lint").linters_by_ft = { htmldjango = { "djlint" } }
+            require("lint").linters.djlint = {
+                cmd = vim.fn.stdpath("data") .. "/mason/bin/djlint",
+                args = { "--profile=jinja", "--lint", "--quiet", "-" },
+                stdin = true,
+                stream = "stdout",
+                ignore_exitcode = true,
+                parser = function(output, bufnr)
+                    local diagnostics = {}
+                    local pattern = "(%w+)%s+(%d+):(%d+)%s+(.+)"
+                    for line in output:gmatch("[^\r\n]+") do
+                        local code, lnum, col, msg = line:match(pattern)
+                        if code and lnum and col and msg then
+                            table.insert(diagnostics, {
+                                bufnr = bufnr,
+                                lnum = tonumber(lnum) - 1,
+                                col = tonumber(col) - 1,
+                                end_lnum = tonumber(lnum) - 1,
+                                end_col = tonumber(col),
+                                message = msg,
+                                code = code,
+                                severity = vim.diagnostic.severity.ERROR,
+                                source = "djlint",
+                                user_data = { lint_code = code },
+                            })
+                        end
+                    end
+                    return diagnostics
+                end,
+            }
+            vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "BufEnter" }, {
+                callback = function()
+                    vim.schedule(function()
+                        require("lint").try_lint()
+                    end)
+                end,
+            })
+            vim.api.nvim_create_autocmd("FileType", {
+                pattern = "htmldjango",
+                callback = function(args)
+                    local bufnr = args.buf
+                    local timer = vim.loop.new_timer()
+                    local debounce_ms = 300
+                    local function debounced_lint()
+                        timer:stop()
+                        timer:start(
+                            debounce_ms,
+                            0,
+                            vim.schedule_wrap(function()
+                                if vim.api.nvim_buf_is_valid(bufnr) then
+                                    require("lint").try_lint(nil, { bufnr = bufnr })
+                                end
+                            end)
+                        )
+                    end
+                    vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "InsertLeave" }, {
+                        buffer = bufnr,
+                        callback = debounced_lint,
+                    })
+                end,
+            })
+        end,
     },
 
     -- Which-key (Command Pane)
@@ -323,13 +476,15 @@ require("lazy").setup({
         config = function()
             local wk = require("which-key")
             wk.add({
-                { "\\", desc = "Toggle Neo-tree" },
+                { "\\", desc = "Toggle/Focus Neo-tree" },
                 { "<leader>f", desc = "Format buffer" },
                 { "<leader>q", "<cmd>q<cr>", desc = "Quit" },
                 { "<leader>w", "<cmd>w<cr>", desc = "Write" },
                 { "<leader>d", group = "Diagnostics" },
                 { "<leader>df", vim.diagnostic.open_float, desc = "Show Diagnostics" },
                 { "<leader>dq", vim.diagnostic.setloclist, desc = "Diagnostic Quickfix" },
+                { "<leader>di", desc = "Focus Diagnostic Window" },
+                { "<leader>dc", desc = "Close Diagnostic Window" },
                 { "<leader>s", group = "Search" },
                 { "<leader>sf", desc = "Search Files" },
                 { "<leader>sg", desc = "Search Grep" },
@@ -339,12 +494,108 @@ require("lazy").setup({
                 { "<leader>lr", vim.lsp.buf.references, desc = "Goto References" },
                 { "<leader>ln", vim.lsp.buf.rename, desc = "Rename" },
                 { "<leader>la", vim.lsp.buf.code_action, desc = "Code Action" },
+                { "[d", desc = "Previous Diagnostic" },
+                { "]d", desc = "Next Diagnostic" },
             })
         end,
     },
-}, {
-    -- Lazy options
-    ui = { border = "rounded" },
+
+    -- CodeCompanion (AI Integration)
+    {
+        "olimorris/codecompanion.nvim",
+        dependencies = {
+            "nvim-lua/plenary.nvim",
+        },
+        config = function()
+            require("codecompanion").setup({
+                adapters = {
+                    anthropic = function()
+                        return require("codecompanion.adapters").extend("anthropic", {
+                            env = {
+                                api_key = vim.env.ANTHROPIC_API_KEY,
+                            },
+                            schema = {
+                                model = {
+                                    default = "claude-3.5-sonnet",
+                                },
+                            },
+                        })
+                    end,
+                    openai = function()
+                        return require("codecompanion.adapters").extend("openai", {
+                            env = {
+                                api_key = vim.env.OPENAI_API_KEY,
+                            },
+                            schema = {
+                                model = {
+                                    default = "gpt-4o",
+                                },
+                            },
+                        })
+                    end,
+                    gemini = function()
+                        return require("codecompanion.adapters").extend("gemini", {
+                            env = {
+                                api_key = vim.env.GEMINI_API_KEY,
+                            },
+                        })
+                    end,
+                },
+                strategies = {
+                    chat = {
+                        adapter = "anthropic",
+                    },
+                    inline = {
+                        adapter = "anthropic",
+                    },
+                },
+            })
+        end,
+    },
+})
+
+-- Global Diagnostic Keymaps
+vim.keymap.set("n", "[d", function()
+    vim.diagnostic.goto_prev({ float = { border = "rounded", focusable = true, scope = "cursor" } })
+end, { desc = "Previous Diagnostic" })
+vim.keymap.set("n", "]d", function()
+    vim.diagnostic.goto_next({ float = { border = "rounded", focusable = true, scope = "cursor" } })
+end, { desc = "Next Diagnostic" })
+vim.keymap.set("n", "<leader>di", function()
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+        local buf = vim.api.nvim_win_get_buf(win)
+        if vim.bo[buf].buftype == "nofile" and vim.api.nvim_win_get_config(win).relative ~= "" then
+            vim.api.nvim_set_current_win(win)
+            vim.api.nvim_create_autocmd("WinLeave", {
+                buffer = buf,
+                callback = function()
+                    if vim.api.nvim_win_is_valid(win) then
+                        vim.api.nvim_win_close(win, true)
+                    end
+                end,
+                once = true,
+            })
+            return
+        end
+    end
+    print("No diagnostic window available")
+end, { desc = "Focus Diagnostic Window" })
+vim.keymap.set("n", "<leader>dc", function()
+    for _, win in ipairs(vim.api.nvim_list_wins()) do
+        local buf = vim.api.nvim_win_get_buf(win)
+        if vim.bo[buf].buftype == "nofile" and vim.api.nvim_win_get_config(win).relative ~= "" then
+            vim.api.nvim_win_close(win, true)
+            return
+        end
+    end
+end, { desc = "Close Diagnostic Window" })
+
+-- Filetype Detection for htmldjango
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+    pattern = { "*.html" },
+    callback = function()
+        vim.bo.filetype = "htmldjango"
+    end,
 })
 
 -- Basic Keymaps
@@ -354,9 +605,9 @@ vim.keymap.set("n", "<C-j>", "<C-w>j", { desc = "Move to below window" })
 vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "Move to above window" })
 vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "Move to right window" })
 
--- Use 4 spaces instead of tabs for Lua
+-- Use 4 spaces instead of tabs
 vim.api.nvim_create_autocmd("FileType", {
-    pattern = "lua",
+    pattern = { "lua", "glsl", "html", "ts", "svelte", "typescript", "htmldjango" },
     callback = function()
         vim.opt_local.expandtab = true
         vim.opt_local.shiftwidth = 4
@@ -364,3 +615,25 @@ vim.api.nvim_create_autocmd("FileType", {
         vim.opt_local.softtabstop = 4
     end,
 })
+
+-- Highlight yanked text
+vim.api.nvim_create_autocmd("TextYankPost", {
+    callback = function()
+        vim.highlight.on_yank({ higroup = "IncSearch", timeout = 100 })
+    end,
+    desc = "Highlight yanked text",
+})
+
+-- Focus new split when created
+vim.api.nvim_set_keymap(
+    "n",
+    "<C-w>v",
+    "<C-w>v<C-w>l",
+    { noremap = true, silent = true, desc = "Vertical split and focus" }
+)
+vim.api.nvim_set_keymap(
+    "n",
+    "<C-w>s",
+    "<C-w>s<C-w>j",
+    { noremap = true, silent = true, desc = "Horizontal split and focus" }
+)
