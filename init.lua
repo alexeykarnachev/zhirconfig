@@ -134,6 +134,7 @@ require("lazy").setup({
                 "isort",
                 "djlint",
                 "html-lsp",
+                "htmx-lsp",
                 "prettierd",
             },
         },
@@ -160,78 +161,88 @@ require("lazy").setup({
             local lspconfig = require("lspconfig")
             local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
+            -- Shared on_attach function
+            local on_attach = function(client, bufnr)
+                local opts = { buffer = bufnr, desc = "LSP: " }
+                vim.keymap.set(
+                    "n",
+                    "gd",
+                    vim.lsp.buf.definition,
+                    vim.tbl_extend("force", opts, { desc = "Goto Definition" })
+                )
+                vim.keymap.set(
+                    "n",
+                    "gr",
+                    vim.lsp.buf.references,
+                    vim.tbl_extend("force", opts, { desc = "Goto References" })
+                )
+                vim.keymap.set(
+                    "n",
+                    "<leader>rn",
+                    vim.lsp.buf.rename,
+                    vim.tbl_extend("force", opts, { desc = "Rename" })
+                )
+                vim.keymap.set(
+                    "n",
+                    "<leader>ca",
+                    vim.lsp.buf.code_action,
+                    vim.tbl_extend("force", opts, { desc = "Code Action" })
+                )
+                vim.keymap.set("n", "K", function()
+                    -- Prefer html-lsp for hover if available
+                    local clients = vim.lsp.get_clients({ bufnr = bufnr })
+                    for _, c in ipairs(clients) do
+                        if c.name == "html" and c.server_capabilities.hoverProvider then
+                            local position_encoding = c.offset_encoding or "utf-16"
+                            local params = vim.lsp.util.make_position_params(0, position_encoding)
+                            vim.lsp.buf_request(bufnr, "textDocument/hover", params, nil)
+                            return
+                        end
+                    end
+                    -- Fallback to default hover
+                    vim.lsp.buf.hover()
+                end, vim.tbl_extend("force", opts, { desc = "Hover Documentation" }))
+            end
+
+            local custom_hover_handler = function(err, result, ctx, config)
+                if err or not result or not result.contents then
+                    return vim.lsp.handlers.hover(err, result, ctx, config)
+                end
+
+                local lines = {}
+                if type(result.contents) == "table" and result.contents.value then
+                    for line in result.contents.value:gmatch("[^\r\n]+") do
+                        if not (line:lower():match("%[baseline[_%s]+icon%]") or line:match("data:image/svg")) then
+                            table.insert(lines, line)
+                        end
+                    end
+                    result.contents.value = table.concat(lines, "\n")
+                elseif type(result.contents) == "string" then
+                    for line in result.contents:gmatch("[^\r\n]+") do
+                        if not (line:lower():match("%[baseline[_%s]+icon%]") or line:match("data:image/svg")) then
+                            table.insert(lines, line)
+                        end
+                    end
+                    result.contents = table.concat(lines, "\n")
+                end
+
+                vim.lsp.handlers.hover(err, result, ctx, config)
+            end
+
             require("mason-lspconfig").setup({
-                ensure_installed = { "lua_ls", "pyright", "html" },
+                ensure_installed = { "lua_ls", "pyright", "html", "htmx" },
                 automatic_installation = true,
                 handlers = {
                     function(server_name)
                         lspconfig[server_name].setup({
                             capabilities = capabilities,
-                            on_attach = function(_, bufnr)
-                                local opts = { buffer = bufnr, desc = "LSP: " }
-                                vim.keymap.set(
-                                    "n",
-                                    "gd",
-                                    vim.lsp.buf.definition,
-                                    vim.tbl_extend("force", opts, { desc = "Goto Definition" })
-                                )
-                                vim.keymap.set(
-                                    "n",
-                                    "gr",
-                                    vim.lsp.buf.references,
-                                    vim.tbl_extend("force", opts, { desc = "Goto References" })
-                                )
-                                vim.keymap.set(
-                                    "n",
-                                    "<leader>rn",
-                                    vim.lsp.buf.rename,
-                                    vim.tbl_extend("force", opts, { desc = "Rename" })
-                                )
-                                vim.keymap.set(
-                                    "n",
-                                    "<leader>ca",
-                                    vim.lsp.buf.code_action,
-                                    vim.tbl_extend("force", opts, { desc = "Code Action" })
-                                )
-                                vim.keymap.set(
-                                    "n",
-                                    "K",
-                                    vim.lsp.buf.hover,
-                                    vim.tbl_extend("force", opts, { desc = "Hover Documentation" })
-                                )
-                            end,
+                            on_attach = on_attach,
                         })
                     end,
                     ["lua_ls"] = function()
                         lspconfig.lua_ls.setup({
                             capabilities = capabilities,
-                            on_attach = function(_, bufnr)
-                                local opts = { buffer = bufnr, desc = "LSP: " }
-                                vim.keymap.set(
-                                    "n",
-                                    "gd",
-                                    vim.lsp.buf.definition,
-                                    vim.tbl_extend("force", opts, { desc = "Goto Definition" })
-                                )
-                                vim.keymap.set(
-                                    "n",
-                                    "gr",
-                                    vim.lsp.buf.references,
-                                    vim.tbl_extend("force", opts, { desc = "Goto References" })
-                                )
-                                vim.keymap.set(
-                                    "n",
-                                    "<leader>rn",
-                                    vim.lsp.buf.rename,
-                                    vim.tbl_extend("force", opts, { desc = "Rename" })
-                                )
-                                vim.keymap.set(
-                                    "n",
-                                    "<leader>ca",
-                                    vim.lsp.buf.code_action,
-                                    vim.tbl_extend("force", opts, { desc = "Code Action" })
-                                )
-                            end,
+                            on_attach = on_attach,
                             settings = {
                                 Lua = {
                                     runtime = { version = "LuaJIT" },
@@ -245,40 +256,41 @@ require("lazy").setup({
                     end,
                     ["html"] = function()
                         lspconfig.html.setup({
-                            capabilities = capabilities,
-                            on_attach = function(_, bufnr)
-                                local opts = { buffer = bufnr, desc = "LSP: " }
-                                vim.keymap.set(
-                                    "n",
-                                    "gd",
-                                    vim.lsp.buf.definition,
-                                    vim.tbl_extend("force", opts, { desc = "Goto Definition" })
-                                )
-                                vim.keymap.set(
-                                    "n",
-                                    "gr",
-                                    vim.lsp.buf.references,
-                                    vim.tbl_extend("force", opts, { desc = "Goto References" })
-                                )
-                                vim.keymap.set(
-                                    "n",
-                                    "<leader>rn",
-                                    vim.lsp.buf.rename,
-                                    vim.tbl_extend("force", opts, { desc = "Rename" })
-                                )
-                                vim.keymap.set(
-                                    "n",
-                                    "<leader>ca",
-                                    vim.lsp.buf.code_action,
-                                    vim.tbl_extend("force", opts, { desc = "Code Action" })
-                                )
-                                vim.keymap.set(
-                                    "n",
-                                    "K",
-                                    vim.lsp.buf.hover,
-                                    vim.tbl_extend("force", opts, { desc = "Hover Documentation" })
-                                )
-                            end,
+                            capabilities = vim.tbl_deep_extend("force", capabilities, {
+                                textDocument = {
+                                    completion = {
+                                        completionItem = {
+                                            snippetSupport = true,
+                                        },
+                                    },
+                                    hover = {
+                                        dynamicRegistration = true,
+                                    },
+                                },
+                            }),
+                            on_attach = on_attach,
+                            filetypes = { "html", "htmldjango" },
+                            settings = {
+                                html = {
+                                    hover = {
+                                        documentation = true,
+                                        references = true,
+                                    },
+                                },
+                            },
+                            handlers = {
+                                ["textDocument/hover"] = custom_hover_handler,
+                            },
+                        })
+                    end,
+                    ["htmx"] = function()
+                        lspconfig.htmx.setup({
+                            capabilities = vim.tbl_deep_extend("force", capabilities, {
+                                textDocument = {
+                                    hover = nil,
+                                },
+                            }),
+                            on_attach = on_attach,
                             filetypes = { "html", "htmldjango" },
                         })
                     end,
@@ -420,7 +432,7 @@ require("lazy").setup({
                 javascript = { "prettierd" },
                 html = { "prettierd" },
                 css = { "prettierd" },
-                htmldjango = { "djlint", "prettierd" },
+                htmldjango = { "prettierd", "djlint" },
             },
             formatters = {
                 stylua = {
