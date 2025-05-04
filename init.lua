@@ -126,7 +126,16 @@ require("lazy").setup({
         cmd = { "Mason", "MasonInstall" },
         opts = {
             ui = { border = "rounded" },
-            ensure_installed = { "stylua", "black", "lua-language-server", "ruff", "isort", "djlint" },
+            ensure_installed = {
+                "stylua",
+                "black",
+                "lua-language-server",
+                "ruff",
+                "isort",
+                "djlint",
+                "html-lsp",
+                "prettierd",
+            },
         },
         config = function(_, opts)
             require("mason").setup(opts)
@@ -152,7 +161,7 @@ require("lazy").setup({
             local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
             require("mason-lspconfig").setup({
-                ensure_installed = { "lua_ls", "pyright" },
+                ensure_installed = { "lua_ls", "pyright", "html" },
                 automatic_installation = true,
                 handlers = {
                     function(server_name)
@@ -183,6 +192,12 @@ require("lazy").setup({
                                     "<leader>ca",
                                     vim.lsp.buf.code_action,
                                     vim.tbl_extend("force", opts, { desc = "Code Action" })
+                                )
+                                vim.keymap.set(
+                                    "n",
+                                    "K",
+                                    vim.lsp.buf.hover,
+                                    vim.tbl_extend("force", opts, { desc = "Hover Documentation" })
                                 )
                             end,
                         })
@@ -226,6 +241,45 @@ require("lazy").setup({
                                     },
                                 },
                             },
+                        })
+                    end,
+                    ["html"] = function()
+                        lspconfig.html.setup({
+                            capabilities = capabilities,
+                            on_attach = function(_, bufnr)
+                                local opts = { buffer = bufnr, desc = "LSP: " }
+                                vim.keymap.set(
+                                    "n",
+                                    "gd",
+                                    vim.lsp.buf.definition,
+                                    vim.tbl_extend("force", opts, { desc = "Goto Definition" })
+                                )
+                                vim.keymap.set(
+                                    "n",
+                                    "gr",
+                                    vim.lsp.buf.references,
+                                    vim.tbl_extend("force", opts, { desc = "Goto References" })
+                                )
+                                vim.keymap.set(
+                                    "n",
+                                    "<leader>rn",
+                                    vim.lsp.buf.rename,
+                                    vim.tbl_extend("force", opts, { desc = "Rename" })
+                                )
+                                vim.keymap.set(
+                                    "n",
+                                    "<leader>ca",
+                                    vim.lsp.buf.code_action,
+                                    vim.tbl_extend("force", opts, { desc = "Code Action" })
+                                )
+                                vim.keymap.set(
+                                    "n",
+                                    "K",
+                                    vim.lsp.buf.hover,
+                                    vim.tbl_extend("force", opts, { desc = "Hover Documentation" })
+                                )
+                            end,
+                            filetypes = { "html", "htmldjango" },
                         })
                     end,
                 },
@@ -322,6 +376,9 @@ require("lazy").setup({
                 enable = true,
             },
             indent = { enable = true },
+            filetype_to_parsername = {
+                htmldjango = "html",
+            },
         },
     },
 
@@ -363,7 +420,7 @@ require("lazy").setup({
                 javascript = { "prettierd" },
                 html = { "prettierd" },
                 css = { "prettierd" },
-                htmldjango = { "djlint" },
+                htmldjango = { "djlint", "prettierd" },
             },
             formatters = {
                 stylua = {
